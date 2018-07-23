@@ -1,17 +1,10 @@
 package extractor2
 
 import (
-	"bytes"
-	"errors"
-	"regexp"
-	"strings"
 	"zhongguo/extractor2/context"
 	"zhongguo/extractor2/html"
 	"zhongguo/extractor2/json"
-
-	"github.com/PuerkitoBio/goquery"
-	"github.com/bitly/go-simplejson"
-	"github.com/xlvector/dlog"
+	estring "zhongguo/extractor2/string"
 )
 
 type Extractor struct {
@@ -31,7 +24,7 @@ func (self *Extractor) Do(parseConfig map[string]interface{}, body string) inter
 	} else if contentType == 1 {
 		return json.DoJsonExtractor(parseConfig, body, self.context)
 	} else if contentType == 2 {
-
+		return estring.DoStringExtractor(parseConfig, body, self.context)
 	}
 	return nil
 }
