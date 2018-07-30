@@ -1,10 +1,8 @@
 package html
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
-	"zhongguo/extractor2/context"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/xlvector/dlog"
@@ -18,7 +16,6 @@ const (
 type HtmlSelector struct {
 	Xpath string
 	Attr  string
-	Regex string
 }
 
 func NewHtmlSelector(v string) *HtmlSelector {
@@ -27,9 +24,6 @@ func NewHtmlSelector(v string) *HtmlSelector {
 	ret.Xpath = tks[0]
 	if len(tks) > 1 {
 		ret.Attr = tks[1]
-	}
-	if len(tks) > 2 {
-		ret.Regex = tks[2]
 	}
 	return ret
 }
@@ -43,16 +37,33 @@ func isEmptyParse(parseConfig map[string]interface{}) bool {
 	return true
 }
 
-func DoHtmlExtractor(parseConfig map[string]interface{}, val string, context *context.Context) interface{} {
+//解析多个结果
+func DoHtmlExtractor(array_define, val string) []interface{} {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(val))
 	if err != nil {
 		dlog.Warn("%s", err.Error())
 		return nil
 	}
-	return doHtmlExtractorSelection(parseConfig, doc.First(), context)
+	var ret []interface{}
+	rootSelection := doc.Find(array_define)
+	rootSelection.Each(func(i int, stmp *goquery.Selection) {
+		htxt, _ := stmp.Html()
+		ret = append(ret, htxt)
+	})
+	return ret
 }
 
-func doHtmlExtractorSelection(parseConfig map[string]interface{}, selection *goquery.Selection, context *context.Context) interface{} {
+//解析单个结果
+func DoHtmlOneExtractor(parseConfig string, val string) string {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(val))
+	if err != nil {
+		dlog.Warn("%s", err.Error())
+		return ""
+	}
+	return queryValue(parseConfig, doc.First())
+}
+
+func doHtmlExtractorSelection(parseConfig map[string]interface{}, selection *goquery.Selection) interface{} {
 	array_define, array_define_ok := parseConfig[ARRAY_DEFINE]
 	first_define, first_define_ok := parseConfig[FIRST_DEFINE]
 	rootSelection := selection
@@ -74,10 +85,10 @@ func doHtmlExtractorSelection(parseConfig map[string]interface{}, selection *goq
 						continue
 					}
 					if parseValQuery, ok := parseVal.(string); ok {
-						item[key] = queryValue(parseValQuery, stmp, context)
+						item[key] = queryValue(parseValQuery, stmp)
 					}
 					if parseMapQuery, ok := parseVal.(map[string]interface{}); ok {
-						item[key] = doHtmlExtractorSelection(parseMapQuery, stmp, context)
+						item[key] = doHtmlExtractorSelection(parseMapQuery, stmp)
 					}
 				}
 				arrayRet = append(arrayRet, item)
@@ -91,10 +102,10 @@ func doHtmlExtractorSelection(parseConfig map[string]interface{}, selection *goq
 			continue
 		}
 		if parseValQuery, ok := parseVal.(string); ok {
-			mapRet[key] = queryValue(parseValQuery, rootSelection, context)
+			mapRet[key] = queryValue(parseValQuery, rootSelection)
 		}
 		if parseMapQuery, ok := parseVal.(map[string]interface{}); ok {
-			mapRet[key] = doHtmlExtractorSelection(parseMapQuery, rootSelection, context)
+			mapRet[key] = doHtmlExtractorSelection(parseMapQuery, rootSelection)
 		}
 	}
 	return mapRet
@@ -142,18 +153,12 @@ func doXpath(xpath string, s *goquery.Selection) *goquery.Selection {
 	return b
 }
 
-func queryValue(query string, s *goquery.Selection, context *context.Context) interface{} {
+func queryValue(query string, s *goquery.Selection) string {
 	defer func() {
 		if err := recover(); err != nil {
 			dlog.Warn("queryXpath Error:%v", err)
 		}
 	}()
-	if strings.HasPrefix(query, "{{") && strings.HasSuffix(query, "}}") {
-		return context.ParseTmplate(query)
-	}
-	if strings.Contains(query, "{{") && strings.Contains(query, "}}") {
-		query = context.ParseTmplate(query)
-	}
 	var b *goquery.Selection
 	b = s
 	var text string
@@ -161,7 +166,7 @@ func queryValue(query string, s *goquery.Selection, context *context.Context) in
 	htmlSelector := NewHtmlSelector(query)
 	if len(htmlSelector.Xpath) > 0 {
 		b = doXpath(query, s)
-		text = b.Text()
+		text, _ = b.Html()
 	}
 	if len(htmlSelector.Attr) > 0 {
 		if htmlSelector.Attr == "html" {
@@ -172,22 +177,6 @@ func queryValue(query string, s *goquery.Selection, context *context.Context) in
 				text = "https:" + text
 			}
 			text = strings.TrimSpace(text)
-		}
-	}
-
-	if len(htmlSelector.Regex) > 0 {
-		reg := regexp.MustCompile(htmlSelector.Regex)
-		result := reg.FindAllStringSubmatch(text, 1)
-		if len(result) > 0 {
-			group := result[0]
-			if len(group) > 1 {
-				text = group[1]
-			} else {
-				text = group[0]
-			}
-		} else {
-			dlog.Warn("正则%s没有匹配到结果", htmlSelector.Regex)
-			return nil
 		}
 	}
 	return text

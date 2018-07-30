@@ -2,10 +2,8 @@ package json
 
 import (
 	encodingJson "encoding/json"
-	"regexp"
 	"strconv"
 	"strings"
-	"zhongguo/extractor2/context"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/elgs/jsonql"
@@ -26,17 +24,35 @@ func isEmptyParse(parseConfig map[string]interface{}) bool {
 	return true
 }
 
-func DoJsonExtractor(parseConfig map[string]interface{}, val string, context *context.Context) interface{} {
+//解析复杂结构
+func DoJsonExtractor(array_define, val string) []interface{} {
 	val = FilterJSONP(val)
 	jsonData, err := simplejson.NewFromReader(strings.NewReader(val))
 	if err != nil {
 		dlog.Warn("读取json失败%s", err.Error())
 		return nil
 	}
-	return doJsonExtractorSelection(parseConfig, jsonData, context)
+	rootSelection := getJsonPaths(strings.Split(array_define, "."), jsonData)
+	arraySelection := getJsonArray(rootSelection)
+	var ret []interface{}
+	for _, v := range arraySelection {
+		ret = append(ret, v.Interface())
+	}
+	return ret
 }
 
-func doJsonExtractorSelection(parseConfig map[string]interface{}, jsonData *simplejson.Json, context *context.Context) interface{} {
+//解析单个结果
+func DoJsonOneExtractor(parseConfig string, val string) interface{} {
+	val = FilterJSONP(val)
+	jsonData, err := simplejson.NewFromReader(strings.NewReader(val))
+	if err != nil {
+		dlog.Warn("读取json失败%s", err.Error())
+		return nil
+	}
+	return queryValue(parseConfig, jsonData)
+}
+
+func doJsonExtractorSelection(parseConfig map[string]interface{}, jsonData *simplejson.Json) interface{} {
 	array_define, array_define_ok := parseConfig[ARRAY_DEFINE]
 	first_define, first_define_ok := parseConfig[FIRST_DEFINE]
 	rootSelection := jsonData
@@ -58,10 +74,10 @@ func doJsonExtractorSelection(parseConfig map[string]interface{}, jsonData *simp
 						continue
 					}
 					if parseValQuery, ok := parseVal.(string); ok {
-						item[key] = queryValue(parseValQuery, itemSelection, context)
+						item[key] = queryValue(parseValQuery, itemSelection)
 					}
 					if parseMapQuery, ok := parseVal.(map[string]interface{}); ok {
-						item[key] = doJsonExtractorSelection(parseMapQuery, itemSelection, context)
+						item[key] = doJsonExtractorSelection(parseMapQuery, itemSelection)
 					}
 				}
 				arrayRet = append(arrayRet, item)
@@ -75,10 +91,10 @@ func doJsonExtractorSelection(parseConfig map[string]interface{}, jsonData *simp
 			continue
 		}
 		if parseValQuery, ok := parseVal.(string); ok {
-			mapRet[key] = queryValue(parseValQuery, rootSelection, context)
+			mapRet[key] = queryValue(parseValQuery, rootSelection)
 		}
 		if parseMapQuery, ok := parseVal.(map[string]interface{}); ok {
-			mapRet[key] = doJsonExtractorSelection(parseMapQuery, rootSelection, context)
+			mapRet[key] = doJsonExtractorSelection(parseMapQuery, rootSelection)
 		}
 	}
 	return mapRet
@@ -174,31 +190,21 @@ func getJsonPaths(jsonpath []string, json *simplejson.Json) *simplejson.Json {
 
 type JsonSelector struct {
 	JsonPath string
-	Regex    string
 }
 
 func NewJsonSelector(v string) *JsonSelector {
 	ret := &JsonSelector{}
 	tks := strings.Split(v, ";")
 	ret.JsonPath = tks[0]
-	if len(tks) > 1 {
-		ret.Regex = tks[1]
-	}
 	return ret
 }
 
-func queryValue(jsonPath string, json *simplejson.Json, context *context.Context) interface{} {
+func queryValue(jsonPath string, json *simplejson.Json) interface{} {
 	defer func() {
 		if err := recover(); err != nil {
 			dlog.Warn("json解析错误%v", err)
 		}
 	}()
-	if strings.HasPrefix(jsonPath, "{{") && strings.HasSuffix(jsonPath, "}}") {
-		return context.ParseTmplate(jsonPath)
-	}
-	if strings.Contains(jsonPath, "{{") && strings.Contains(jsonPath, "}}") {
-		jsonPath = context.ParseTmplate(jsonPath)
-	}
 	var ret interface{}
 	jsonSelector := NewJsonSelector(jsonPath)
 	if len(jsonSelector.JsonPath) > 0 {
@@ -206,22 +212,6 @@ func queryValue(jsonPath string, json *simplejson.Json, context *context.Context
 		ret = b.Interface()
 	} else {
 		ret = json.Interface()
-	}
-	if ret != nil && len(jsonSelector.Regex) > 0 {
-		reg := regexp.MustCompile(jsonSelector.Regex)
-		text := ret.(string)
-		result := reg.FindAllStringSubmatch(text, 1)
-		if len(result) > 0 {
-			group := result[0]
-			if len(group) > 1 {
-				ret = group[1]
-			} else {
-				ret = group[0]
-			}
-		} else {
-			dlog.Warn("正则%s没有匹配到结果", jsonSelector.Regex)
-			return nil
-		}
 	}
 	return ret
 }

@@ -1,7 +1,7 @@
 package context
 
 type Context struct {
-	DoTemplateFunc func(template string) string
+	DoTemplateFunc func(template string) string //去执行业务真正的context
 }
 
 func NewContext(doTemplateFunc func(template string) string) *Context {
