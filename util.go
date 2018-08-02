@@ -1,6 +1,8 @@
 package extractor2
 
 import (
+	system_json "encoding/json"
+	"fmt"
 	"strings"
 	"zhongguo/extractor2/json"
 )
@@ -22,4 +24,31 @@ func DetectContentType(content string) int {
 		return 1
 	}
 	return 2
+}
+func Interface2String(val interface{}) string {
+	if str, ok := val.(string); ok {
+		return str
+	}
+	if i, ok := val.(int); ok {
+		return fmt.Sprintf("%v", i)
+	}
+	if f32, ok := val.(float32); ok {
+		return fmt.Sprintf("%v", f32)
+	}
+	if f64, ok := val.(float64); ok {
+		return fmt.Sprintf("%v", f64)
+	}
+	if b, ok := val.(bool); ok {
+		return fmt.Sprintf("%v", b)
+	}
+	if r, ok := val.(rune); ok {
+		return fmt.Sprintf("%v", r)
+	}
+	if bs, ok := val.([]byte); ok {
+		return fmt.Sprintf("%v", bs)
+	}
+	if marshalJson, err := system_json.Marshal(val); err == nil {
+		return string(marshalJson)
+	}
+	return fmt.Sprintf("%v", val)
 }

@@ -102,17 +102,29 @@ func doJsonExtractorSelection(parseConfig map[string]interface{}, jsonData *simp
 }
 
 func getJsonArray(json *simplejson.Json) []*simplejson.Json {
-	a, err := json.Array()
+	arrInterface, err := json.Array()
 	if err == nil {
 		jsonArr := []*simplejson.Json{}
-		for index, _ := range a {
+		for index, _ := range arrInterface {
 			item := &simplejson.Json{}
-			item.SetPath([]string{}, a[index])
+			item.SetPath([]string{}, arrInterface[index])
 			jsonArr = append(jsonArr, item)
 		}
 		return jsonArr
+	} else {
+		dlog.Warn("转换jsonarray失败 %v", err)
 	}
 	return nil
+}
+
+func getJsonArrayLength(json *simplejson.Json) int {
+	arrInterface, err := json.Array()
+	if err == nil {
+		return len(arrInterface)
+	} else {
+		dlog.Warn("转换jsonarray失败 %v", err)
+	}
+	return -1
 }
 
 func getJsonPaths(jsonpath []string, json *simplejson.Json) *simplejson.Json {
@@ -121,40 +133,54 @@ func getJsonPaths(jsonpath []string, json *simplejson.Json) *simplejson.Json {
 			break
 		}
 		cmd := jsonpath[x]
-		if cmd == "[*]" {
-			if jsonArr := getJsonArray(json); jsonArr != nil {
-				ret := []interface{}{}
-				for _, item := range jsonArr {
-					itemResult := getJsonPaths(jsonpath[x+1:len(jsonpath)], item)
-					if itemResult != nil {
-						arr, err := itemResult.Array()
-						if err != nil {
-							ret = append(ret, itemResult.Interface())
-						} else {
-							for _, val := range arr {
-								ret = append(ret, val)
-							}
-						}
+		if strings.HasPrefix(cmd, "[") && strings.HasSuffix(cmd, "]") {
+			indexStr := cmd[1 : len(cmd)-1]
+			if strings.Contains(indexStr, ":") {
+				arrInterface, err := json.Array()
+				if err != nil {
+					dlog.Warn("转换jsonarray失败 %v", err)
+					return nil
+				}
+				var startIndex int
+				var endIndex int
+				startIndexStr := strings.Split(indexStr, ":")[0]
+				endIndexStr := strings.Split(indexStr, ":")[1]
+				if len(startIndexStr) > 0 {
+					index, err := strconv.Atoi(startIndexStr)
+					if err != nil {
+						dlog.Warn("convet int error %v", err)
+						return nil
 					}
+					startIndex = index
+				} else {
+					startIndex = 0
+				}
+				if len(endIndexStr) > 0 {
+					index, err := strconv.Atoi(endIndexStr)
+					if err != nil {
+						dlog.Warn("convet int error %v", err)
+						return nil
+					}
+					endIndex = index
+				} else {
+					endIndex = len(arrInterface)
 				}
 				arrJson := &simplejson.Json{}
-				arrJson.SetPath([]string{}, ret)
+				arrJson.SetPath([]string{}, arrInterface[startIndex:endIndex])
 				return arrJson
-			}
-			return nil
-		} else if strings.HasPrefix(cmd, "[") && strings.HasSuffix(cmd, "]") {
-			indexStr := cmd[1 : len(cmd)-1]
-			index, err := strconv.Atoi(indexStr)
-			if err != nil {
-				dlog.Warn("convet int error %v", err)
-				json = nil
-			}
-			temp := json.GetIndex(index)
-			if temp != nil {
-				json = temp
 			} else {
-				dlog.Warn("json array not found %d", index)
-				json = nil
+				index, err := strconv.Atoi(indexStr)
+				if err != nil {
+					dlog.Warn("convet int error %v", err)
+					json = nil
+				}
+				temp := json.GetIndex(index)
+				if temp != nil {
+					json = temp
+				} else {
+					dlog.Warn("json array not found %d", index)
+					json = nil
+				}
 			}
 		} else if strings.HasPrefix(cmd, "(") && strings.HasSuffix(cmd, ")") {
 			query := cmd[1 : len(cmd)-1]
@@ -178,7 +204,8 @@ func getJsonPaths(jsonpath []string, json *simplejson.Json) *simplejson.Json {
 		} else {
 			temp, exist := json.CheckGet(cmd)
 			if !exist {
-				dlog.Warn("json不存在key%s", cmd)
+				yaunshi, _ := encodingJson.Marshal(json.Interface())
+				dlog.Info("json不存在key %s from %s", cmd, string(yaunshi))
 				json = nil
 			} else {
 				json = temp
@@ -202,14 +229,16 @@ func NewJsonSelector(v string) *JsonSelector {
 func queryValue(jsonPath string, json *simplejson.Json) interface{} {
 	defer func() {
 		if err := recover(); err != nil {
-			dlog.Warn("json解析错误%v", err)
+			dlog.Warn("json解析错误 %v", err)
 		}
 	}()
 	var ret interface{}
 	jsonSelector := NewJsonSelector(jsonPath)
 	if len(jsonSelector.JsonPath) > 0 {
 		b := getJsonPaths(strings.Split(jsonSelector.JsonPath, "."), json)
-		ret = b.Interface()
+		if b != nil {
+			ret = b.Interface()
+		}
 	} else {
 		ret = json.Interface()
 	}

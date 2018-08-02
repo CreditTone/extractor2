@@ -1,8 +1,6 @@
 package extractor2
 
 import (
-	system_json "encoding/json"
-	"fmt"
 	"strings"
 	"zhongguo/extractor2/context"
 )
@@ -43,11 +41,7 @@ func isEmptyParse(parseConfig map[string]interface{}) bool {
 func (self *Extractor) convertArrayOfString(input []interface{}) []string {
 	var ret []string
 	for _, v := range input {
-		if marshalJson, err := system_json.Marshal(v); err == nil {
-			ret = append(ret, string(marshalJson))
-		} else {
-			ret = append(ret, fmt.Sprintf("%v", v))
-		}
+		ret = append(ret, Interface2String(v))
 	}
 	return ret
 }
@@ -96,6 +90,10 @@ func (self *Extractor) Do(parseConfig map[string]interface{}, body string) inter
 		}
 	}
 	return mapRet
+}
+
+func (self *Extractor) DoOne(parseConfig string, body string) interface{} {
+	return self.doParseFinalResult(parseConfig, body)
 }
 
 func (self *Extractor) doParseArray(complexParseLine string, body string) []interface{} {

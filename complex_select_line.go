@@ -1,7 +1,6 @@
 package extractor2
 
 import (
-	system_json "encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -90,11 +89,7 @@ func (self *ComplexSelectLine) doComplexSelectLineFirst(body string) string {
 			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, body)
 		} else if selectItem.InputType == "json" {
 			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, body)
-			if marshalJson, err := system_json.Marshal(jsonRet); err == nil {
-				currentRet = string(marshalJson)
-			} else {
-				currentRet = fmt.Sprintf("%v", jsonRet)
-			}
+			currentRet = Interface2String(jsonRet)
 		} else if selectItem.InputType == "string" {
 			currentRet = estring.DoStringOneExtractor(selectItem.SelectBody, body)
 		}
@@ -109,12 +104,8 @@ func (self *ComplexSelectLine) doComplexSelectLine(body string) interface{} {
 			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, body)
 		} else if selectItem.InputType == "json" {
 			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, body)
-			if i != len(self.SelectItems)-1 || len(self.ResultType) > 0 {
-				if marshalJson, err := system_json.Marshal(jsonRet); err == nil {
-					currentRet = string(marshalJson)
-				} else {
-					currentRet = fmt.Sprintf("%v", jsonRet)
-				}
+			if jsonRet != nil && (i != len(self.SelectItems)-1 || len(self.ResultType) > 0) {
+				currentRet = Interface2String(jsonRet)
 			} else {
 				return jsonRet
 			}
@@ -123,6 +114,7 @@ func (self *ComplexSelectLine) doComplexSelectLine(body string) interface{} {
 		}
 	}
 	var finalResult interface{}
+	finalResult = currentRet
 	for _, toType := range self.ResultType {
 		finalResult = convertType(toType, currentRet)
 		currentRet = fmt.Sprintf("%v", finalResult)
