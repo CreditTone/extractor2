@@ -130,7 +130,9 @@ func doXpath(xpath string, s *goquery.Selection) *goquery.Selection {
 				xpathArr = append(xpathArr, xpath[start:end])
 				xpath = xpath[end:]
 			} else {
-				xpathArr = append(xpathArr, xpath)
+				if strings.TrimSpace(xpath) != "" {
+					xpathArr = append(xpathArr, xpath)
+				}
 				break
 			}
 		}
@@ -165,14 +167,14 @@ func queryValue(query string, s *goquery.Selection) string {
 	//var err error
 	htmlSelector := NewHtmlSelector(query)
 	if len(htmlSelector.Xpath) > 0 {
-		b = doXpath(query, s)
+		b = doXpath(htmlSelector.Xpath, s)
 		text, _ = b.Html()
 	}
 	if len(htmlSelector.Attr) > 0 {
 		if htmlSelector.Attr == "html" {
 			text, _ = b.Html()
 		} else {
-			text, _ = b.First().Attr(htmlSelector.Attr)
+			text, _ = b.Attr(htmlSelector.Attr)
 			if (htmlSelector.Attr == "href" || htmlSelector.Attr == "src") && strings.HasPrefix(text, "//") {
 				text = "https:" + text
 			}

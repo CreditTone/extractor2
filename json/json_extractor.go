@@ -33,6 +33,9 @@ func DoJsonExtractor(array_define, val string) []interface{} {
 		return nil
 	}
 	rootSelection := getJsonPaths(strings.Split(array_define, "."), jsonData)
+	if rootSelection == nil {
+		return nil
+	}
 	arraySelection := getJsonArray(rootSelection)
 	var ret []interface{}
 	for _, v := range arraySelection {

@@ -1,6 +1,8 @@
 package extractor2
 
 import (
+	"fmt"
+	"runtime/debug"
 	"strings"
 	"zhongguo/extractor2/context"
 )
@@ -47,6 +49,12 @@ func (self *Extractor) convertArrayOfString(input []interface{}) []string {
 }
 
 func (self *Extractor) Do(parseConfig map[string]interface{}, body string) interface{} {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("解析路径出错:%v", parseConfig)
+			debug.PrintStack()
+		}
+	}()
 	first_define, first_define_ok := parseConfig[FIRST_DEFINE]
 	array_define, array_define_ok := parseConfig[ARRAY_DEFINE]
 	if first_define_ok {
@@ -93,6 +101,12 @@ func (self *Extractor) Do(parseConfig map[string]interface{}, body string) inter
 }
 
 func (self *Extractor) DoOne(parseConfig string, body string) interface{} {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("解析路径出错:%s", parseConfig)
+			debug.PrintStack()
+		}
+	}()
 	return self.doParseFinalResult(parseConfig, body)
 }
 
