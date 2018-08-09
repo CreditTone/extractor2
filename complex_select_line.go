@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"zhongguo/extractor2/html"
-	"zhongguo/extractor2/json"
-	estring "zhongguo/extractor2/string"
+
+	"github.com/CreditTone/extractor2/html"
+	"github.com/CreditTone/extractor2/json"
+	estring "github.com/CreditTone/extractor2/string"
 )
 
 type SelectItem struct {

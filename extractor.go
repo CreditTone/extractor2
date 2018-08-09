@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strings"
-	"zhongguo/extractor2/context"
+
+	"github.com/CreditTone/extractor2/context"
 )
 
 const (

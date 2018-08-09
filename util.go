@@ -4,7 +4,8 @@ import (
 	system_json "encoding/json"
 	"fmt"
 	"strings"
-	"zhongguo/extractor2/json"
+
+	"github.com/CreditTone/extractor2/json"
 )
 
 //0表示html 1表示json 2表示既不是html也不是json
