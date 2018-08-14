@@ -5,7 +5,7 @@
 我们理解您需要更便捷更高效的工具。解析web2.0复杂的html、ajax、json、以及jsonp等格式，并将解析语法自动解析为您期望的数据格式。extractor2证书您需要的解析工具。您只要通过简单的调用，即可在您的golang爬虫里面灵活的使用。
 ------
 
-## 快速开始
+## 简单示例
 
 ```golang
 doTemplate := func(template string) string {
