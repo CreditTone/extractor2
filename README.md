@@ -2,24 +2,42 @@
 
 ------
 
-我们理解您需要更便捷更高效的工具解析web2.0复杂的html、ajax、json、以及jsonp等格式，并将解析语法自动解析为您期望的数据格式。extractor2证书您需要的解析工具。您只要通过简单的调用，即可在您的golang爬虫里面灵活的使用。
-
-> * 整理知识，学习笔记
-> * 发布日记，杂文，所见所想
-> * 撰写发布技术文稿（代码支持）
-> * 撰写发布学术论文（LaTeX 公式支持）
-
-![cmd-markdown-logo](https://www.zybuluo.com/static/img/logo.png)
-
-除了您现在看到的这个 Cmd Markdown 在线版本，您还可以前往以下网址下载：
-
-### [Windows/Mac/Linux 全平台客户端](https://www.zybuluo.com/cmd/)
-
-> 请保留此份 Cmd Markdown 的欢迎稿兼使用说明，如需撰写新稿件，点击顶部工具栏右侧的 <i class="icon-file"></i> **新文稿** 或者使用快捷键 `Ctrl+Alt+N`。
-
+我们理解您需要更便捷更高效的工具。解析web2.0复杂的html、ajax、json、以及jsonp等格式，并将解析语法自动解析为您期望的数据格式。extractor2证书您需要的解析工具。您只要通过简单的调用，即可在您的golang爬虫里面灵活的使用。
 ------
 
-## 什么是 Markdown
+## 快速开始
+
+```golang
+doTemplate := func(template string) string {
+    //...
+    return template
+}
+extractor := extractor2.NewExtractor(doTemplate)
+lastPage := "
+    <dd>
+       <a href="https://beijing.anjuke.com/sale/" title="北京二手房">北京</a>
+       <a href="https://tianjin.anjuke.com/sale/" title="天津二手房">天津</a>
+       <a href="https://dalian.anjuke.com/sale/" title="大连二手房">大连</a>
+       <a href="https://sjz.anjuke.com/sale/" title="石家庄二手房">石家庄</a>
+       <a href="https://heb.anjuke.com/sale/" title="哈尔滨二手房">哈尔滨</a>
+       <a href="https://sy.anjuke.com/sale/" title="沈阳二手房">沈阳</a>
+       <a href="https://ty.anjuke.com/sale/" title="太原二手房">太原</a>
+       <a href="https://cc.anjuke.com/sale/" title="长春二手房">长春</a>
+       <a href="https://weihai.anjuke.com/sale/" title="威海二手房">威海</a>
+       <a href="https://weifang.anjuke.com/sale/" title="潍坊二手房">潍坊</a>
+       <a href="https://huhehaote.anjuke.com/sale/" title="呼和浩特二手房">呼和浩特</a>
+       <a href="https://baotou.anjuke.com/sale/" title="包头二手房">包头</a>
+       <a href="https://qinhuangdao.anjuke.com/sale/" title="秦皇岛二手房">秦皇岛</a>
+       <a href="https://yt.anjuke.com/sale/" title="烟台二手房">烟台</a>
+       <a href="https://baoding.anjuke.com/sale/" title="保定二手房">保定</a>
+     </dd>
+"
+extractorConfig := map[string]interface{}{
+    "_array":"html(a)",
+    "city":"a"
+}
+result := extractor.Do(extractorConfig.ExtractorConfig, lastPage)
+```
 
 Markdown 是一种方便记忆、书写的纯文本标记语言，用户可以使用这些标记符号以最小的输入代价生成极富表现力的文档：譬如您正在阅读的这份文档。它使用简单的符号标记不同的标题，分割不同的段落，**粗体** 或者 *斜体* 某些文字，更棒的是，它还可以
 
