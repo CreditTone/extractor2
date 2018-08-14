@@ -28,7 +28,13 @@ type Extractor struct {
 
 func NewExtractor(doTemplateFunc func(template string) string) *Extractor {
 	instance := Extractor{}
-	instance.context = context.NewContext(doTemplateFunc)
+	if doTemplateFunc == nil {
+		instance.context = context.NewContext(func(template string) string {
+			return template
+		})
+	} else {
+		instance.context = context.NewContext(doTemplateFunc)
+	}
 	return &instance
 }
 
