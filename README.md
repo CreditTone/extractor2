@@ -8,11 +8,7 @@
 ## 简单示例
 
 ```golang
-doTemplate := func(template string) string {
-    //...
-    return template
-}
-extractor := extractor2.NewExtractor(doTemplate)
+extractor := extractor2.NewExtractor(nil)
 lastPage := "
     <dd>
        <a href="https://beijing.anjuke.com/sale/" title="北京二手房">北京</a>
