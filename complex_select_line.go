@@ -87,12 +87,12 @@ func (self *ComplexSelectLine) doComplexSelectLineFirst(body string) string {
 	currentRet := body
 	for _, selectItem := range self.SelectItems {
 		if selectItem.InputType == "html" {
-			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, body)
+			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, currentRet)
 		} else if selectItem.InputType == "json" {
-			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, body)
+			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, currentRet)
 			currentRet = Interface2String(jsonRet)
 		} else if selectItem.InputType == "string" {
-			currentRet = estring.DoStringOneExtractor(selectItem.SelectBody, body)
+			currentRet = estring.DoStringOneExtractor(selectItem.SelectBody, currentRet)
 		}
 	}
 	return currentRet
@@ -102,16 +102,16 @@ func (self *ComplexSelectLine) doComplexSelectLine(body string) interface{} {
 	currentRet := body
 	for i, selectItem := range self.SelectItems {
 		if selectItem.InputType == "html" {
-			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, body)
+			currentRet = html.DoHtmlOneExtractor(selectItem.SelectBody, currentRet)
 		} else if selectItem.InputType == "json" {
-			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, body)
+			jsonRet := json.DoJsonOneExtractor(selectItem.SelectBody, currentRet)
 			if jsonRet != nil && (i != len(self.SelectItems)-1 || len(self.ResultType) > 0) {
 				currentRet = Interface2String(jsonRet)
 			} else {
 				return jsonRet
 			}
 		} else if selectItem.InputType == "string" {
-			currentRet = estring.DoStringOneExtractor(selectItem.SelectBody, body)
+			currentRet = estring.DoStringOneExtractor(selectItem.SelectBody, currentRet)
 		}
 	}
 	var finalResult interface{}

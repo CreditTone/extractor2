@@ -13,15 +13,6 @@ const (
 	FIRST_DEFINE = "_first"
 )
 
-func init() {
-	//	json.ExternalDoHtmlOneExtractor = html.DoHtmlOneExtractor
-	//	json.ExternalDoStringOneExtractor = estring.DoStringOneExtractor
-	//	html.ExternalDoJsonOneExtractor = json.DoJsonOneExtractor
-	//	html.ExternalDoStringOneExtractor = estring.DoStringOneExtractor
-	//	estring.ExternalDoHtmlOneExtractor = html.DoHtmlOneExtractor
-	//	estring.ExternalDoJsonOneExtractor = json.DoJsonOneExtractor
-}
-
 type Extractor struct {
 	context *context.Context
 }

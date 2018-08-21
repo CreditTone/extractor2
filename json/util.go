@@ -6,6 +6,10 @@ import (
 
 func FilterJSONP(s string) string {
 	p0 := strings.Index(s, "{")
+	p00 := strings.Index(s, "[")
+	if p0 > p00 {
+		p0 = p00
+	}
 	p1 := strings.Index(s, "(")
 	if p1 < 0 {
 		return s
