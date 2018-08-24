@@ -118,16 +118,16 @@ func doXpath(xpath string, s *goquery.Selection) *goquery.Selection {
 		}
 	}()
 	var b *goquery.Selection
-	if strings.Contains(xpath, "[") && strings.Contains(xpath, "]") {
+	if strings.Contains(xpath, " [") && strings.Contains(xpath, "]") {
 		xpathArr := []string{}
 		for {
-			start := strings.Index(xpath, "[")
-			end := strings.Index(xpath, "]") + 1
+			start := strings.Index(xpath, " [")
+			end := strings.Index(xpath[start:], "]") + 1
 			if start != -1 {
 				if start > 0 {
 					xpathArr = append(xpathArr, xpath[0:start])
 				}
-				xpathArr = append(xpathArr, xpath[start:end])
+				xpathArr = append(xpathArr, strings.TrimSpace(xpath[start:end]))
 				xpath = xpath[end:]
 			} else {
 				if strings.TrimSpace(xpath) != "" {

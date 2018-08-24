@@ -74,6 +74,7 @@ func (self *Extractor) Do(parseConfig map[string]interface{}, body string) inter
 				}
 				if parseValQuery, ok := parseVal.(string); ok {
 					item[key] = self.doParseFinalResult(parseValQuery, itemBody)
+					continue
 				}
 				if parseMapQuery, ok := parseVal.(map[string]interface{}); ok {
 					item[key] = self.Do(parseMapQuery, itemBody)
