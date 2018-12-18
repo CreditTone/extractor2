@@ -114,7 +114,7 @@ func doHtmlExtractorSelection(parseConfig map[string]interface{}, selection *goq
 func doXpath(xpath string, s *goquery.Selection) *goquery.Selection {
 	defer func() {
 		if err := recover(); err != nil {
-			dlog.Warn("doXpath Error:%v", err)
+			dlog.Warn("doXpath Error:%v for %s", err, xpath)
 		}
 	}()
 	var b *goquery.Selection
@@ -122,13 +122,17 @@ func doXpath(xpath string, s *goquery.Selection) *goquery.Selection {
 		xpathArr := []string{}
 		for {
 			start := strings.Index(xpath, " [")
-			end := strings.Index(xpath[start:], "]") + 1
+			end := start + strings.Index(xpath[start:], "]") + 1
 			if start != -1 {
 				if start > 0 {
 					xpathArr = append(xpathArr, xpath[0:start])
 				}
 				xpathArr = append(xpathArr, strings.TrimSpace(xpath[start:end]))
-				xpath = xpath[end:]
+				if end < len(xpath) {
+					xpath = xpath[end:]
+				} else {
+					break
+				}
 			} else {
 				if strings.TrimSpace(xpath) != "" {
 					xpathArr = append(xpathArr, xpath)
